@@ -16,7 +16,7 @@ public struct Tokenizer {
 
     /// Analyses given string `data` of string `encoding` using the descriptor
     /// passed upon initialisation and returns the tokens found in order.
-    public func analyse(data: Data, encoding: String.Encoding = .utf8) throws -> [Token] {
+    @inlinable public func analyse(data: Data, encoding: String.Encoding = .utf8) throws -> [Token] {
         return try analyse(string: expectString(from: data, encoding: encoding))
     }
 
@@ -59,7 +59,7 @@ public struct Tokenizer {
 extension Tokenizer {
 
     /// Decodes given data using given string encoding and returns the result only if valid. Throws an error otherwise.
-    private func expectString(from data: Data, encoding: String.Encoding) throws -> String {
+    @usableFromInline internal func expectString(from data: Data, encoding: String.Encoding) throws -> String {
         guard !data.isEmpty else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: [], debugDescription: "The given data is empty."))
@@ -72,7 +72,7 @@ extension Tokenizer {
     }
 
     /// Performs validation steps on the string and returns the result only if valid. Throws an error otherwise.
-    private func expectTokenizableString(string: String) throws -> String {
+    @usableFromInline internal func expectTokenizableString(string: String) throws -> String {
         guard !string.isEmpty else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: [], debugDescription: "The given string is of invalid length."))

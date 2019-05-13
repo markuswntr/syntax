@@ -3,35 +3,26 @@ import Foundation
 // The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
 public struct Tokenizer {
 
-    /// The input type that holds the value reference to be analysed
-    fileprivate enum Analysee {
-        case data(Data, encoding: String.Encoding)
-        case string(String)
-    }
-
     /// The input value to be tokenized
-    private let analysee: Analysee
+    private let descriptor: TokenDescriptor
 
-    /// Initializes a new tokenizer over given string data using given encoding upon reading.
+    /// Initializes a new tokenizer utilizing the configuration and token descriptions from given descriptor.
     ///
-    /// Tokenizer can not be reused. They are bound to the data passed via this initializer.
-    /// This is a lightweight initializer that only stores the references of given values.
-    public init(over data: Data, encoding: String.Encoding = .utf8) {
-        analysee = .data(data, encoding: encoding)
+    /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
+    /// This is a lightweight initializer that only stores references of given values.
+    public init(descriptor: TokenDescriptor) {
+        self.descriptor = descriptor
     }
 
-    /// Initializes a new tokenizer over given string.
-    ///
-    /// Tokenizer can not be reused. They are bound to the string passed via this initializer.
-    /// This is a lightweight initializer that only stores a reference to given string value.
-    public init(over string: String) {
-        analysee = .string(string)
+    /// Analyses given string `data` of string `encoding` using the descriptor
+    /// passed upon initialisation and returns the tokens found in order.
+    public func analyse(data: Data, encoding: String.Encoding = .utf8) throws -> [Token] {
+        return try analyse(string: expectString(from: data, encoding: encoding))
     }
 
-    /// Analyses the `analysee` passed to the tokenizer on initialisation using given
-    /// description and returns the tokens found within the `analysee` in order.
-    public func analyse(using descriptor: TokenDescriptor) throws -> [Token] {
-        let analysee = try expectNonEmptyString(from: self.analysee)
+    /// Analyses given `string` using the descriptor passed upon initialisation and returns the tokens found in order.
+    public func analyse(string: String) throws -> [Token] {
+        let analysee = try expectTokenizableString(string: string)
 
         var tokens: [Token] = []
         var offset = analysee.startIndex
@@ -67,27 +58,8 @@ public struct Tokenizer {
 // MARK: Validation & Decoding
 extension Tokenizer {
 
-    /// Decodes data from analysee, or uses wrapping string directly, performs pre-validation on the string
-    /// and returning the result only if all validation steps succeeded. Throws an error otherwise.
-    fileprivate func expectNonEmptyString(from analysee: Analysee) throws -> String {
-        let stringValue: String
-        switch analysee {
-        case let .data(data, encoding: encoding):
-            stringValue = try decode(data: data, encoding: encoding)
-        case let .string(string):
-            stringValue = string
-        }
-
-        guard !stringValue.isEmpty else {
-            throw DecodingError.dataCorrupted(
-                .init(codingPath: [], debugDescription: "The given string is of invalid length."))
-        }
-        return stringValue
-    }
-
-    /// Decodes given data using given string encoding, performs validation steps and returns the result
-    /// only if all validation steps finished successfully. Throws an error otherwise.
-    private func decode(data: Data, encoding: String.Encoding) throws -> String {
+    /// Decodes given data using given string encoding and returns the result only if valid. Throws an error otherwise.
+    private func expectString(from data: Data, encoding: String.Encoding) throws -> String {
         guard !data.isEmpty else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: [], debugDescription: "The given data is empty."))
@@ -95,6 +67,15 @@ extension Tokenizer {
         guard let string = String(data: data, encoding: encoding) else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: [], debugDescription: "The given data is not \(encoding) encoded."))
+        }
+        return string
+    }
+
+    /// Performs validation steps on the string and returns the result only if valid. Throws an error otherwise.
+    private func expectTokenizableString(string: String) throws -> String {
+        guard !string.isEmpty else {
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: [], debugDescription: "The given string is of invalid length."))
         }
         return string
     }

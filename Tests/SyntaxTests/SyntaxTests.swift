@@ -79,9 +79,11 @@ final class SyntaxTests: XCTestCase {
         descriptor.append(CharacterSetTokenDescription())
         descriptor.append(StringTokenDescription())
 
-        let tokenizer = Tokenizer(over: "([123] [asd] \"some string\")")
-        XCTAssertNoThrow(try tokenizer.analyse(using: descriptor))
-        let tokens = try! tokenizer.analyse(using: descriptor)
+        let tokenizer = Tokenizer(descriptor: descriptor)
+        XCTAssertNoThrow(try tokenizer.analyse(string: "([123] [asd] \"some string\")"))
+        XCTAssertNoThrow(try tokenizer.analyse(
+            data: "([123] [asd] \"some string\")".data(using: .utf8)!, encoding: .utf8))
+        let tokens = try! tokenizer.analyse(string: "([123] [asd] \"some string\")")
 
         XCTAssertTrue(tokens.count == 9)
         

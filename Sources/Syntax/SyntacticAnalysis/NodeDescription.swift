@@ -1,5 +1,7 @@
 import Foundation
 
+public protocol Node {}
+
 public protocol NodeDescription {
 
     func node<Container: Collection>(

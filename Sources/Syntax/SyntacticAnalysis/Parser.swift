@@ -1,6 +1,5 @@
 import Foundation
 
-public protocol Node {}
 extension Array: Node {}
 
 /// The parser transforms an array of tokens into an Abstract Syntax Tree (AST) - aka "Syntactic Analysis"
@@ -35,12 +34,13 @@ public struct Parser {
             nodes.append(node)
         }
 
-        // Make sure this is an array node, otherwise away invalid collection boxing
-        guard nodes.count > 1 else {
-            return nodes[nodes.startIndex]
+        // Make sure there IS an actual node description in the container
+        guard !nodes.isEmpty else {
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [], debugDescription: "There are no nodes represented in token container"))
         }
 
-        // This is an array node, return as is
-        return nodes
+        // Make sure this is an array node, otherwise return the node directly and avoid invalid collection boxing
+        return nodes.count > 1 ? nodes : nodes[nodes.startIndex]
     }
 }

@@ -3,7 +3,7 @@ import Foundation
 // The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
 public struct Tokenizer {
 
-    /// The input value to be tokenized
+    /// The descriptor against which to evaluate possible tokens
     private let descriptor: TokenDescriptor
 
     /// Initializes a new tokenizer utilizing the configuration and token descriptions from given descriptor.

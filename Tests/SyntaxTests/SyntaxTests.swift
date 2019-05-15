@@ -7,7 +7,7 @@ final class SyntaxTests: XCTestCase {
 
         let descriptor = TokenDescriptor()
         descriptor.append(contentsOf: CharacterToken.allCases)
-        descriptor.append(CharacterSetTokenDescription())
+        descriptor.append(CharacterSetDescription())
         descriptor.append(StringTokenDescription())
 
         let tokenizer = Tokenizer(descriptor: descriptor)

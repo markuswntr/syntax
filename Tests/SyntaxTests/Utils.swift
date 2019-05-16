@@ -24,9 +24,9 @@ enum CharacterSetToken: Token {
 
 extension CharacterToken: TokenDescription {
 
-    func token(in string: String, at offset: String.Index) throws -> (Token, length: Int)? {
-        guard rawValue == string[offset] else { return nil }
-        return (self, 1) // Found self in given string at current offset. A single character, so length == 1
+    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        guard rawValue == container.first else { return nil }
+        return (self, consumedLength: 1) // Found `self` in container. `Self` describes a single char, so length = 1
     }
 }
 
@@ -56,50 +56,49 @@ final class CharacterSetDescription: TokenDescription, NodeDescription {
 
     // MARK: TokenDescription
 
-    func token(in string: String, at offset: String.Index) throws -> (Token, length: Int)? {
-        if let substring = try find(pattern: .decimalDigits, in: string, at: offset) {
-            return (CharacterSetToken.number(substring), substring.count)
-        } else if let substring = try find(pattern: .letters, in: string, at: offset) {
-            return (CharacterSetToken.name(substring), substring.count)
+    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        if let substring = try find(pattern: .decimalDigits, in: container) {
+            return (CharacterSetToken.number(substring), consumedLength: substring.count)
+        } else if let substring = try find(pattern: .letters, in: container) {
+            return (CharacterSetToken.name(substring), consumedLength: substring.count)
         }
         return nil
     }
 
-    private func find(pattern: CharacterSet, in string: String, at offset: String.Index) throws -> Substring? {
+    private func find(pattern: CharacterSet, in container: String.SubSequence) throws -> Substring? {
         // First character must match the set directly, otherwise it cannot be valid
-        guard string[offset].unicodeScalars.allSatisfy(pattern.contains) else {
+        guard let firstChar = container.first, firstChar.unicodeScalars.allSatisfy(pattern.contains) else {
             return nil
         }
 
-        var currentOffset = string.index(after: offset) //  Advance to the second character right away
-        while currentOffset < string.endIndex, string[currentOffset].unicodeScalars.allSatisfy(pattern.contains) {
-            currentOffset = string.index(after: currentOffset)
+        var currentOffset = container.index(after: container.startIndex) //  Advance to the second character right away
+        while currentOffset < container.endIndex, container[currentOffset].unicodeScalars.allSatisfy(pattern.contains) {
+            currentOffset = container.index(after: currentOffset)
         }
 
-        return string[offset..<currentOffset]
+        return container[container.startIndex..<currentOffset]
     }
 }
 
 final class StringTokenDescription: TokenDescription {
 
-    func token(in string: String, at offset: String.Index) throws -> (Token, length: Int)? {
-        guard string[offset] == "\"" else { return nil }
+    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        guard container.first == "\"" else { return nil }
 
-        var currentOffset = string.index(after: offset) // Current char is a quote, so go to the next char right away
-        while currentOffset < string.endIndex, string[currentOffset] != "\"" {
-            currentOffset = string.index(after: currentOffset)
+        var currentOffset = container.index(after: container.startIndex) // Current char is a quote, so go to the next
+        while currentOffset < container.endIndex, container[currentOffset] != "\"" {
+            currentOffset = container.index(after: currentOffset)
         }
 
         // Perform a validation on both loop terminations. The loop must end on a quote ("), not on the end index.
-        guard currentOffset < string.endIndex && string[currentOffset] == "\"" else {
-            let startIndex = offset.utf16Offset(in: string)
+        guard currentOffset < container.endIndex && container[currentOffset] == "\"" else {
             throw DecodingError.dataCorrupted(.init(
-                codingPath: [], debugDescription: "Found an unterminated string, starting at \(startIndex)"))
+                codingPath: [], debugDescription: "Found an unterminated string in \(container)"))
         }
         // "Manually" advance by one character, as the loop above ends scanning ON the trailing quote (").
         // Advancing the index by one character will include the quote (") accordingly.
-        currentOffset = string.index(after: currentOffset)
-        let substring = string[offset..<currentOffset]
+        currentOffset = container.index(after: currentOffset)
+        let substring = container[container.startIndex..<currentOffset]
         return (substring, substring.count)
     }
 }

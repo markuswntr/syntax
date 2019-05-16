@@ -5,12 +5,12 @@ final class SyntaxTests: XCTestCase {
 
     func testExample() {
 
-        let descriptor = TokenDescriptor()
-        descriptor.append(contentsOf: CharacterToken.allCases)
-        descriptor.append(CharacterSetDescription())
-        descriptor.append(StringTokenDescription())
+        var descriptions: [TokenDescription] = []
+        descriptions.append(contentsOf: CharacterToken.allCases)
+        descriptions.append(CharacterSetDescription())
+        descriptions.append(StringTokenDescription())
 
-        let tokenizer = Tokenizer(descriptor: descriptor)
+        let tokenizer = Tokenizer(descriptions: descriptions)
         XCTAssertNoThrow(try tokenizer.analyse(string: "([123] [asd] \"some string\")"))
         XCTAssertNoThrow(try tokenizer.analyse(
             data: "([123] [asd] \"some string\")".data(using: .utf8)!, encoding: .utf8))

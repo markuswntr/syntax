@@ -5,10 +5,10 @@ class ParserTests: XCTestCase {
 
     func testExample() {
 
-        let tokenDescriptor = TokenDescriptor()
-        tokenDescriptor.append(contentsOf: CharacterToken.allCases)
-        tokenDescriptor.append(CharacterSetDescription())
-        let tokenizer = Tokenizer(descriptor: tokenDescriptor)
+        var tokenDescriptions: [TokenDescription] = []
+        tokenDescriptions.append(contentsOf: CharacterToken.allCases)
+        tokenDescriptions.append(CharacterSetDescription())
+        let tokenizer = Tokenizer(descriptions: tokenDescriptions)
         let tokens = try! tokenizer.analyse(string: "keyword instance,123,notanumber")
 
         let nodeDescriptor = NodeDescriptor()

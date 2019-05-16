@@ -1,7 +1,7 @@
 import XCTest
 @testable import Syntax
 
-final class SyntaxTests: XCTestCase {
+final class TokenizerTests: XCTestCase {
 
     func testExample() {
 

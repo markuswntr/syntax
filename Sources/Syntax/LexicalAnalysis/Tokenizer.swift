@@ -1,17 +1,21 @@
 import Foundation
 
-// The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
+/// The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
 public struct Tokenizer {
 
-    /// The descriptor against which to evaluate possible tokens
-    private let descriptor: TokenDescriptor
+    /// The descriptions of tokens against which to evaluate
+    public let descriptions: [TokenDescription]
+
+    /// The additional configuration of the tokenizer
+    public let configuration: Configuration
 
     /// Initializes a new tokenizer utilizing the configuration and token descriptions from given descriptor.
     ///
     /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
     /// This is a lightweight initializer that only stores references of given values.
-    public init(descriptor: TokenDescriptor) {
-        self.descriptor = descriptor
+    public init(descriptions: [TokenDescription], configuration: Configuration = .init()) {
+        self.descriptions = descriptions
+        self.configuration = configuration
     }
 
     /// Analyses given string `data` of string `encoding` using the descriptor
@@ -30,19 +34,20 @@ public struct Tokenizer {
         while offset < analysee.endIndex {
 
             // Test if character is an ignorable character (e.g. whitespace or newline character)
-            guard !(analysee[offset].unicodeScalars.allSatisfy(descriptor.ignoredCharacterSet.contains)) else {
+            guard !(analysee[offset].unicodeScalars.allSatisfy(configuration.ignoredCharacters.contains)) else {
                 offset = analysee.index(after: offset) // Skip this character, as it should be ignored
                 continue
             }
 
-            // Find the token starting at current index, and its length in the string sequence
-            guard let (token, length) = try descriptor.token(in: analysee, at: offset) else {
+            // Find the first token in the remaining string and its consuming length
+            let remainder = analysee[offset..<analysee.endIndex]
+            guard let (token, consumed) = try firstToken(in: remainder) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                     "Invalid character \(analysee[offset]) at index \(offset.utf16Offset(in: analysee))"))
             }
 
             // Advance to the next character that starts after the last found token
-            offset = analysee.index(offset, offsetBy: length)
+            offset = analysee.index(offset, offsetBy: consumed)
             tokens.append(token) // and backup the last found token
         }
 
@@ -78,5 +83,21 @@ extension Tokenizer {
                 .init(codingPath: [], debugDescription: "The given string is of invalid length."))
         }
         return string
+    }
+}
+
+// MARK: Evaluating Descriptions
+extension Tokenizer {
+
+    /// Returns the token starting at given index in given string
+    ///
+    /// - Complexity: O(*n*), where *n* is the length of the available descriptions sequence.
+    @usableFromInline func firstToken(in container: Substring) throws -> (Token, consumedLength: Int)? {
+        for description in descriptions {
+            if let match = try description.firstToken(in: container) {
+                return match
+            }
+        }
+        return nil
     }
 }

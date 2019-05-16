@@ -1,9 +1,9 @@
 os:
     - linux
     - osx
-language: generic
 sudo: required
 dist: trusty
+language: swift
 osx_image: xcode10.2
 env:
     - SWIFT_VERSION=swift-5.0

@@ -34,7 +34,7 @@ A clear and concise description of what you expected to happen (or code).
 
 - Swift version(s): [e.g. 3.1, 4.2.1, 5.0-DEVELOPMENT-SNAPSHOT-2018-12-13-a]
 - OS: [e.g. OSX 10.13.4, Windows 10]
-- How you are using Apicalypse
+- How you are using Syntax
 
 ### Additional context/Screenshots
 

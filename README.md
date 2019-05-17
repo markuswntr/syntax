@@ -1,4 +1,4 @@
-# [WIP] Abstract Syntax 🌲
+# [WIP] Syntax 🌲
 
 [![Build Status](https://travis-ci.com/markuswntr/syntax.svg?branch=master)](https://travis-ci.com/markuswntr/syntax)
 [![Maintainability](https://api.codeclimate.com/v1/badges/6c5997e50689b8c86ae5/maintainability)](https://codeclimate.com/github/markuswntr/syntax/maintainability)

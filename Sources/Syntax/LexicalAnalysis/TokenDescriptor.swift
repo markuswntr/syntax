@@ -1,7 +1,7 @@
 import Foundation
 
 /// A type to describe how a token will look like in a string sequence.
-public protocol TokenDescription {
+public protocol TokenDescriptor {
 
     /// Evaluates given container against a token that is described by self, returning the first matching
     /// token and its consuming length in the container on success, `nil` otherwise.

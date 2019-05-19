@@ -3,8 +3,8 @@ import Foundation
 /// The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
 public struct Tokenizer {
 
-    /// The descriptions of tokens against which to evaluate
-    public let descriptions: [TokenDescription]
+    /// The descriptors of tokens against which to evaluate
+    public let descriptors: [TokenDescriptor]
 
     /// The additional configuration of the tokenizer
     public let configuration: Configuration
@@ -13,9 +13,9 @@ public struct Tokenizer {
     ///
     /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
     /// This is a lightweight initializer that only stores references of given values.
-    public init(descriptions: [TokenDescription], configuration: Configuration = .init()) {
-        self.descriptions = descriptions
+    public init(descriptors: [TokenDescriptor], configuration: Configuration = .init()) {
         self.configuration = configuration
+        self.descriptors = descriptors
     }
 
     /// Analyses given string `data` of string `encoding` using the descriptor
@@ -93,8 +93,8 @@ extension Tokenizer {
     ///
     /// - Complexity: O(*n*), where *n* is the length of the available descriptions sequence.
     @usableFromInline func firstToken(in container: Substring) throws -> (Token, consumedLength: Int)? {
-        for description in descriptions {
-            if let match = try description.firstToken(in: container) {
+        for descriptor in descriptors {
+            if let match = try descriptor.firstToken(in: container) {
                 return match
             }
         }

@@ -22,7 +22,7 @@ enum CharacterSetToken: Token {
 
 // MARK: Descriptions
 
-extension CharacterToken: TokenDescription {
+extension CharacterToken: TokenDescriptor {
 
     func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
         guard rawValue == container.first else { return nil }
@@ -30,7 +30,7 @@ extension CharacterToken: TokenDescription {
     }
 }
 
-final class CharacterSetDescription: TokenDescription, NodeDescription {
+final class CharacterSetDescription: TokenDescriptor, NodeDescription {
 
     // MARK: NodeDescription
 
@@ -80,7 +80,7 @@ final class CharacterSetDescription: TokenDescription, NodeDescription {
     }
 }
 
-final class StringTokenDescription: TokenDescription {
+final class StringTokenDescription: TokenDescriptor {
 
     func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
         guard container.first == "\"" else { return nil }

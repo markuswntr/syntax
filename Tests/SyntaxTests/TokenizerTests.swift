@@ -5,12 +5,12 @@ final class TokenizerTests: XCTestCase {
 
     func testExample() {
 
-        var descriptions: [TokenDescription] = []
-        descriptions.append(contentsOf: CharacterToken.allCases)
-        descriptions.append(CharacterSetDescription())
-        descriptions.append(StringTokenDescription())
+        var descriptors: [TokenDescriptor] = []
+        descriptors.append(contentsOf: CharacterToken.allCases)
+        descriptors.append(CharacterSetDescription())
+        descriptors.append(StringTokenDescription())
 
-        let tokenizer = Tokenizer(descriptions: descriptions)
+        let tokenizer = Tokenizer(descriptors: descriptors)
         XCTAssertNoThrow(try tokenizer.analyse(string: "([123] [asd] \"some string\")"))
         XCTAssertNoThrow(try tokenizer.analyse(
             data: "([123] [asd] \"some string\")".data(using: .utf8)!, encoding: .utf8))

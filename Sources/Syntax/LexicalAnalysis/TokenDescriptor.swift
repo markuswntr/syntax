@@ -9,3 +9,38 @@ public protocol TokenDescriptor {
     /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
     func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)?
 }
+
+
+extension TokenDescriptor {
+
+    public static func descriptor(for token: Character, type: CharacterToken.Type) -> /*some*/ TokenDescriptor {
+        return CharacterTokenDescriptor(token: token, type: type)
+    }
+}
+
+
+// MARK: Generator
+
+private final class CharacterTokenDescriptor: TokenDescriptor {
+
+    let rawValue: Character
+
+    let nativeType: CharacterToken.Type
+
+    init(token: Character, type: CharacterToken.Type) {
+        rawValue = token
+        nativeType = type
+    }
+
+    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        // 1. Compare the character described in self, and the current character in the tokenizing string
+        guard let analysee = container.first, analysee == rawValue else { return nil }
+        // 2. It they match, try to create a native representation of that character
+        guard let token = nativeType.init(value: analysee) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
+                "Character \(analysee) is not representable as \(nativeType)"))
+        }
+        // 3. Finish successfully. The token describes a single char, so length equal 1
+        return (token, consumedLength: 1)
+    }
+}

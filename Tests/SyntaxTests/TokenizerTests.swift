@@ -5,8 +5,9 @@ final class TokenizerTests: XCTestCase {
 
     func testExample() {
 
-        var descriptors: [TokenDescriptor] = []
-        descriptors.append(contentsOf: CharacterToken.allCases)
+        var descriptors: [TokenDescriptor] = CharacterToken.allCases.map {
+            CharacterTokenDescriptor(token: $0.rawValue, type: CharacterToken.self)
+        }
         descriptors.append(CharacterSetDescription())
         descriptors.append(StringTokenDescription())
 

@@ -7,7 +7,7 @@ extension Substring: Token {}
 extension String: Node {}
 extension Double: Node {}
 
-enum CharacterToken: Character, CaseIterable, Token {
+enum CharacterToken: Character, CaseIterable, Syntax.CharacterToken {
     case parentheseOpen = "("
     case parentheseClose = ")"
     case bracketOpen = "["
@@ -21,14 +21,6 @@ enum CharacterSetToken: Token {
 }
 
 // MARK: Descriptions
-
-extension CharacterToken: TokenDescriptor {
-
-    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
-        guard rawValue == container.first else { return nil }
-        return (self, consumedLength: 1) // Found `self` in container. `Self` describes a single char, so length = 1
-    }
-}
 
 final class CharacterSetDescription: TokenDescriptor, NodeDescription {
 
@@ -56,7 +48,7 @@ final class CharacterSetDescription: TokenDescriptor, NodeDescription {
 
     // MARK: TokenDescription
 
-    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+    func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
         if let substring = try find(pattern: .decimalDigits, in: container) {
             return (CharacterSetToken.number(substring), consumedLength: substring.count)
         } else if let substring = try find(pattern: .letters, in: container) {
@@ -82,7 +74,7 @@ final class CharacterSetDescription: TokenDescriptor, NodeDescription {
 
 final class StringTokenDescription: TokenDescriptor {
 
-    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+    func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
         guard container.first == "\"" else { return nil }
 
         var currentOffset = container.index(after: container.startIndex) // Current char is a quote, so go to the next

@@ -10,29 +10,20 @@ public protocol TokenDescriptor {
     func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)?
 }
 
+// MARK: CharacterToken Descriptor
 
-extension TokenDescriptor {
-
-    public static func descriptor(for token: Character, type: CharacterToken.Type) -> /*some*/ TokenDescriptor {
-        return CharacterTokenDescriptor(token: token, type: type)
-    }
-}
-
-
-// MARK: Generator
-
-private final class CharacterTokenDescriptor: TokenDescriptor {
+public final class CharacterTokenDescriptor: TokenDescriptor {
 
     let rawValue: Character
 
     let nativeType: CharacterToken.Type
 
-    init(token: Character, type: CharacterToken.Type) {
+    public init(token: Character, type: CharacterToken.Type) {
         rawValue = token
         nativeType = type
     }
 
-    func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+    public func firstToken(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
         // 1. Compare the character described in self, and the current character in the tokenizing string
         guard let analysee = container.first, analysee == rawValue else { return nil }
         // 2. It they match, try to create a native representation of that character

@@ -9,6 +9,8 @@ public struct Tokenizer {
     /// The additional configuration of the tokenizer
     public let configuration: Configuration
 
+    // MARK: Designated Initializer
+
     /// Initializes a new tokenizer utilizing the configuration and token descriptions from given descriptor.
     ///
     /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
@@ -17,6 +19,8 @@ public struct Tokenizer {
         self.configuration = configuration
         self.descriptors = descriptors
     }
+
+    // MARK: Analysing
 
     /// Analyses given string `data` of string `encoding` using the descriptor
     /// passed upon initialisation and returns the tokens found in order.
@@ -60,7 +64,7 @@ public struct Tokenizer {
     }
 }
 
-// MARK: Validation & Decoding
+// MARK: - Validation & Decoding
 extension Tokenizer {
 
     /// Decodes given data using given string encoding and returns the result only if valid. Throws an error otherwise.
@@ -86,7 +90,7 @@ extension Tokenizer {
     }
 }
 
-// MARK: Evaluating Descriptions
+// MARK: - Evaluating Descriptions
 extension Tokenizer {
 
     /// Returns the token starting at given index in given string
@@ -94,7 +98,7 @@ extension Tokenizer {
     /// - Complexity: O(*n*), where *n* is the length of the available descriptions sequence.
     @usableFromInline func firstToken(in container: Substring) throws -> (Token, consumedLength: Int)? {
         for descriptor in descriptors {
-            if let match = try descriptor.firstToken(in: container) {
+            if let match = try descriptor.first(in: container) {
                 return match
             }
         }

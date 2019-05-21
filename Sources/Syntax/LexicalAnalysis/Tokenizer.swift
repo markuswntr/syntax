@@ -3,8 +3,23 @@ import Foundation
 /// The tokenizer converts an input string data into an array of string tokens (aka “Lexical Analysis”).
 public struct Tokenizer {
 
-    /// The descriptors of tokens against which to evaluate
-    public let descriptors: [TokenDescriptor]
+    /// A container holding the current state of tokenizer process
+    public final class Container {
+
+        /// The base string that the container is analysing
+        public let base: String
+
+        /// The current offset in the base string. Everything up to the offset is analysed.
+        public let offset: String.Index
+
+        /// The remaining subsequence to still be analysed in the process
+        public lazy var remainder: String.SubSequence = base[offset...]
+
+        fileprivate init(base: String, offset: String.Index) {
+            self.base = base
+            self.offset = offset
+        }
+    }
 
     /// Configuration of a tokenizer instance.
     ///
@@ -28,6 +43,10 @@ public struct Tokenizer {
 
     /// The additional configuration of the tokenizer
     public let configuration: Configuration
+
+
+    /// The descriptors of tokens against which to evaluate
+    public let descriptors: [TokenDescriptor]
 
     // MARK: Designated Initializer
 
@@ -64,8 +83,8 @@ public struct Tokenizer {
             }
 
             // Find the first token in the remaining string and its consuming length
-            let remainder = analysee[offset..<analysee.endIndex]
-            guard let (token, consumed) = try firstToken(in: remainder) else {
+            let container = Container(base: string, offset: offset)
+            guard let (token, consumed) = try firstToken(in: container) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                     "Invalid character \(analysee[offset]) at index \(offset.utf16Offset(in: analysee))"))
             }
@@ -116,7 +135,7 @@ extension Tokenizer {
     /// Returns the token starting at given index in given string
     ///
     /// - Complexity: O(*n*), where *n* is the length of the available descriptions sequence.
-    @usableFromInline func firstToken(in container: Substring) throws -> (Token, consumedLength: Int)? {
+    @usableFromInline func firstToken(in container: Container) throws -> (Token, consumedLength: Int)? {
         for descriptor in descriptors {
             if let match = try descriptor.first(in: container) {
                 return match

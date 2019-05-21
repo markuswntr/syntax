@@ -6,8 +6,8 @@ public protocol TokenDescriptor {
     /// Evaluates given container against a token that is described by self, returning the first matching
     /// token and its consuming length in the container on success, `nil` otherwise.
     ///
-    /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
-    func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)?
+    /// - parameter container: The current state of the tokenizer containing remaining values to be evaluated.
+    func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)?
 }
 
 // MARK: CharacterToken Descriptor
@@ -32,9 +32,9 @@ public final class CharacterTokenDescriptor: TokenDescriptor {
     /// token and its consuming length in the container on success, `nil` otherwise.
     ///
     /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
-    public func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+    public func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)? {
         // 1. Compare the character described in self, and the current character in the tokenizing string
-        guard let analysee = container.first, analysee == rawValue else { return nil }
+        guard let analysee = container.remainder.first, analysee == rawValue else { return nil }
         // 2. It they match, try to create a native representation of that character
         guard let token = nativeType.init(value: analysee) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
@@ -71,8 +71,8 @@ public final class KeywordTokenDescriptor: TokenDescriptor {
     /// token and its consuming length in the container on success, `nil` otherwise.
     ///
     /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
-    public func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
-        guard container.starts(with: rawValue) else { return nil }
+    public func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)? {
+        guard container.remainder.starts(with: rawValue) else { return nil }
         // Use `rawValue` rather than the container to avoid extraction
         guard let token = nativeType.init(value: rawValue) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
@@ -104,16 +104,14 @@ public final class PatternTokenDescriptor: TokenDescriptor {
     /// token and its consuming length in the container on success, `nil` otherwise.
     ///
     /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
-    public func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
-        let range = NSRange(location: 0, length: container.count)
-        let base = String(container) // TODO: Avoid string initializer - now
-        guard let result = regex.firstMatch(in: base, options: .anchored, range: range),
-            result.range.location != NSNotFound, result.range.length != 0,
-            let tokenRange = Range(result.range, in: base) else {
-                return nil
-        }
+    public func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)? {
 
-        let rawToken = base[tokenRange]
+        let remainingRange = NSRange(container.offset..., in: container.base)
+        let firstMatch = regex.firstMatch(in: container.base, options: .anchored, range: remainingRange)
+        guard let result = firstMatch, result.range.location != NSNotFound, result.range.length != 0 else { return nil }
+        guard let rowTokenRange = Range(result.range, in: container.base) else { return nil }
+
+        let rawToken = container.base[rowTokenRange]
         guard let token = nativeType.init(value: rawToken) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                 "Pattern \(rawToken) is not representable as \(nativeType)"))

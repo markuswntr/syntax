@@ -16,10 +16,10 @@ public protocol TokenDescriptor {
 public final class CharacterTokenDescriptor: TokenDescriptor {
 
     /// The raw value, or character, that should be scanned for
-    let rawValue: Character
+    private let rawValue: Character
 
     /// The native type that represents the raw value character
-    let nativeType: CharacterToken.Type
+    private let nativeType: CharacterToken.Type
 
     /// Initialises a new instance that scans for given `token`, initialising
     /// a new instance of given `type` on successfully scanning.
@@ -42,5 +42,82 @@ public final class CharacterTokenDescriptor: TokenDescriptor {
         }
         // 3. Finish successfully. The token describes a single char, so length equal 1
         return (token, consumedLength: 1)
+    }
+}
+
+// MARK: KeywordToken Descriptor
+
+public final class KeywordTokenDescriptor: TokenDescriptor {
+
+    /// The keyword that should be scanned for
+    private let rawValue: String
+
+    /// The native type that represents the raw value pattern
+    private let nativeType: KeywordToken.Type
+
+    /// Initialises a new instance that scans for given `keyword`.
+    ///
+    /// The descriptor will return an instance of given `type` on successfully scanning.
+    public init(token: String, type: KeywordToken.Type) throws {
+        guard !token.isEmpty else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
+                "The keyword <\(token)> passed to the descriptor must not be empty."))
+        }
+        rawValue = token
+        nativeType = type
+    }
+
+    /// Evaluates given container against a token that is described by self, returning the first matching
+    /// token and its consuming length in the container on success, `nil` otherwise.
+    ///
+    /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
+    public func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        guard container.starts(with: rawValue) else { return nil }
+        // Use `rawValue` rather than the container to avoid extraction
+        guard let token = nativeType.init(value: rawValue) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
+                "Keyword \(rawValue) is not representable as \(nativeType)"))
+        }
+        return (token, consumedLength: rawValue.count)
+    }
+}
+
+// MARK: PatternToken Descriptor
+
+public final class PatternTokenDescriptor: TokenDescriptor {
+
+    /// The pattern that should be scanned for
+    private let regex: NSRegularExpression
+
+    /// The native type that represents the raw value pattern
+    private let nativeType: PatternToken.Type
+
+    /// Initialises a new instance that scans for patterns using given regular expression.
+    ///
+    /// The descriptor will return an instance of given `type` on successfully scanning.
+    public init(regularExpression: NSRegularExpression, type: PatternToken.Type) {
+        regex = regularExpression
+        nativeType = type
+    }
+
+    /// Evaluates given container against a token that is described by self, returning the first matching
+    /// token and its consuming length in the container on success, `nil` otherwise.
+    ///
+    /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
+    public func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
+        let range = NSRange(location: 0, length: container.count)
+        let base = String(container) // TODO: Avoid string initializer - now
+        guard let result = regex.firstMatch(in: base, options: .anchored, range: range),
+            result.range.location != NSNotFound, result.range.length != 0,
+            let tokenRange = Range(result.range, in: base) else {
+                return nil
+        }
+
+        let rawToken = base[tokenRange]
+        guard let token = nativeType.init(value: rawToken) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
+                "Pattern \(rawToken) is not representable as \(nativeType)"))
+        }
+        return (token, consumedLength: rawToken.count)
     }
 }

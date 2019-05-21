@@ -21,3 +21,35 @@ extension CharacterToken where Self: RawRepresentable, RawValue == Character {
         self.init(rawValue: value)
     }
 }
+
+// MARK: Keyword Token
+
+/// A token that is of 2-n characters in length and is described by a static string aka keyword.
+///
+/// A static string example might be keywords like `if`, `for`, `switch` in traditonal programming languages.
+public protocol KeywordToken: Token {
+
+    /// The initializer takes the keyword as string
+    init?(value: String)
+}
+
+extension KeywordToken where Self: RawRepresentable, RawValue == String {
+
+    /// Forwards the initializer to the raw initializer if it is a raw representable, i.e. String enum
+    public init?(value: String) {
+        self.init(rawValue: value)
+    }
+}
+
+// MARK: Pattern Token
+
+/// A token that is of 2-n characters in length and is described a regular expression.
+///
+/// A Regular expression based pattern token might be variable names in traditonal programming languages.
+public protocol PatternToken: Token {
+
+    /// The initializer takes the found string subsequence as argument
+    ///
+    /// - Note: The subsequence is still just pointing to a range in its base, extracting it will descrease performance.
+    init?(value: String.SubSequence)
+}

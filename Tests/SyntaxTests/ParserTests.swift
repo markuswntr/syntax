@@ -20,11 +20,11 @@ class ParserTests: XCTestCase {
         let tokenizer = Tokenizer(descriptors: tokenDescriptors)
         let tokens = try! tokenizer.analyse(string: analysee)
 
-        let nodeDescriptor = NodeDescriptor()
+        var nodeDescriptor: [NodeDescriptor] = []
         nodeDescriptor.append(CollectionDescription())
         nodeDescriptor.append(KeywordDescription())
         nodeDescriptor.append(PatternDescription())
-        let parser = Parser(descriptor: nodeDescriptor)
+        let parser = Parser(descriptors: nodeDescriptor)
 
         XCTAssertNoThrow(try parser.analyse(container: tokens))
         let syntaxTree = try! parser.analyse(container: tokens)

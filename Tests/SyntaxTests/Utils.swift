@@ -30,12 +30,10 @@ enum PatternToken: Syntax.PatternToken {
 
 // MARK: Descriptions
 
-final class KeywordDescription: NodeDescription {
+final class KeywordDescription: NodeDescriptor {
 
-    // MARK: NodeDescription
-
-    func node<Container: Collection>(
-        for container: Container,
+    func first<Container: Collection>(
+        in container: Container,
         analyse subContainer: (Container.SubSequence) throws -> Node
     ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
         guard let keyword = container.first as? KeywordToken else {
@@ -45,12 +43,12 @@ final class KeywordDescription: NodeDescription {
     }
 }
 
-final class PatternDescription: NodeDescription {
+final class PatternDescription: NodeDescriptor {
 
     // MARK: NodeDescription
 
-    func node<Container: Collection>(
-        for container: Container,
+    func first<Container: Collection>(
+        in container: Container,
         analyse subContainer: (Container.SubSequence) throws -> Node
     ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
 
@@ -95,10 +93,10 @@ final class StringTokenDescription: TokenDescriptor {
 
 
 /// A description for collections defined as: `a,b,c,d`
-final class CollectionDescription: NodeDescription {
+final class CollectionDescription: NodeDescriptor {
 
-    func node<Container: Collection>(
-        for container: Container,
+    func first<Container: Collection>(
+        in container: Container,
         analyse subContainer: (Container.SubSequence) throws -> Node
     ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
 

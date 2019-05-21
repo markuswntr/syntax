@@ -77,7 +77,7 @@ public struct Tokenizer {
         while offset < analysee.endIndex {
 
             // Test if character is an ignorable character (e.g. whitespace or newline character)
-            guard !(analysee[offset].unicodeScalars.allSatisfy(configuration.ignoredCharacters.contains)) else {
+            guard !configuration.ignoredCharacters.contains(analysee[offset]) else {
                 offset = analysee.index(after: offset) // Skip this character, as it should be ignored
                 continue
             }

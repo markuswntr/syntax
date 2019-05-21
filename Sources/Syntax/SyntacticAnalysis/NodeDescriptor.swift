@@ -1,40 +1,20 @@
 import Foundation
 
-public final class NodeDescriptor {
+/// A type to describe how a node will look like based of one or several token.
+public protocol NodeDescriptor {
 
-    public private(set) var nodeDescriptions: [NodeDescription]
+    // FIXME: This function is so tedious to read and write
 
-    public init() {
-        nodeDescriptions = []
-    }
-
-    public func append(_ description: NodeDescription) {
-        return nodeDescriptions.append(description)
-    }
-
-    public func append<S>(contentsOf descriptions: S) where S.Element == NodeDescription, S : Sequence {
-        return nodeDescriptions.append(contentsOf: descriptions)
-    }
-
-    @discardableResult
-    public func remove(at index: Int) -> NodeDescription {
-        return nodeDescriptions.remove(at: index)
-    }
-
-    public func insert(_ description: NodeDescription, at index: Int) {
-        return nodeDescriptions.insert(description, at: index)
-    }
-
-    @usableFromInline
-    func node<Container: Collection>(
-        for container: Container,
-        analyse subContainer: (Container.SubSequence) throws -> Node
-    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
-        for description in nodeDescriptions {
-            if let match = try description.node(for: container, analyse: subContainer) {
-                return match
-            }
-        }
-        return nil
-    }
+    /// Evaluates given container against a node that is described by self, returning the first matching
+    /// node and its consuming length in the container on success, `nil` otherwise.
+    ///
+    /// - Parameters:
+    ///   - container: The remaining container to be evaluated by this descriptor
+    ///   - branch: A function pointer to be used if the nodes needs one or more branches to be analysed.
+    /// - Returns: The node found in the container, `nil` otherwise.
+    /// - Throws: An error if the container does not start with tokens that can be described as nodes by this descriptor
+    func first<Container: Collection>(
+        in container: Container,
+        analyse branch: (Container.SubSequence) throws -> Node
+    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token
 }

@@ -15,14 +15,37 @@ enum CharacterToken: Character, CaseIterable, Syntax.CharacterToken {
     case collectionSeparator = ","
 }
 
-enum CharacterSetToken: Token {
-    case number(Substring)
-    case name(Substring)
+enum KeywordToken: String, CaseIterable, Syntax.KeywordToken, Node {
+    case unless
+    case `switch` // Will properly resolve
+}
+
+enum PatternToken: Syntax.PatternToken {
+    case variable(Substring)
+
+    init?(value: String.SubSequence) {
+        self = .variable(value)
+    }
 }
 
 // MARK: Descriptions
 
-final class CharacterSetDescription: TokenDescriptor, NodeDescription {
+final class KeywordDescription: NodeDescription {
+
+    // MARK: NodeDescription
+
+    func node<Container: Collection>(
+        for container: Container,
+        analyse subContainer: (Container.SubSequence) throws -> Node
+    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
+        guard let keyword = container.first as? KeywordToken else {
+            return nil
+        } // This will do fine for testing
+        return (keyword, consumedToken: 1)
+    }
+}
+
+final class PatternDescription: NodeDescription {
 
     // MARK: NodeDescription
 
@@ -32,65 +55,40 @@ final class CharacterSetDescription: TokenDescriptor, NodeDescription {
     ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
 
         let node: Node
-        switch container.first as? CharacterSetToken {
-        case let .name(value)?:
+        switch container.first as? PatternToken {
+        case let .variable(value)?:
             node = String(value)
-        case let .number(value)?:
-            guard let doubleValue = Double(value) else {
-                throw DecodingError.dataCorrupted(.init(
-                    codingPath: [], debugDescription: "The numeric value \(value) is not double convertible."))
-            }
-            node = doubleValue
+//        case let .number(value)?:
+//            guard let doubleValue = Double(value) else {
+//                throw DecodingError.dataCorrupted(.init(
+//                    codingPath: [], debugDescription: "The numeric value \(value) is not double convertible."))
+//            }
+//            node = doubleValue
         default: return nil
         }
         return (node, consumedToken: 1)
-    }
-
-    // MARK: TokenDescription
-
-    func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
-        if let substring = try find(pattern: .decimalDigits, in: container) {
-            return (CharacterSetToken.number(substring), consumedLength: substring.count)
-        } else if let substring = try find(pattern: .letters, in: container) {
-            return (CharacterSetToken.name(substring), consumedLength: substring.count)
-        }
-        return nil
-    }
-
-    private func find(pattern: CharacterSet, in container: String.SubSequence) throws -> Substring? {
-        // First character must match the set directly, otherwise it cannot be valid
-        guard let firstChar = container.first, firstChar.unicodeScalars.allSatisfy(pattern.contains) else {
-            return nil
-        }
-
-        var currentOffset = container.index(after: container.startIndex) //  Advance to the second character right away
-        while currentOffset < container.endIndex, container[currentOffset].unicodeScalars.allSatisfy(pattern.contains) {
-            currentOffset = container.index(after: currentOffset)
-        }
-
-        return container[container.startIndex..<currentOffset]
     }
 }
 
 final class StringTokenDescription: TokenDescriptor {
 
-    func first(in container: String.SubSequence) throws -> (Token, consumedLength: Int)? {
-        guard container.first == "\"" else { return nil }
+    func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)? {
+        guard container.remainder.first == "\"" else { return nil }
 
-        var currentOffset = container.index(after: container.startIndex) // Current char is a quote, so go to the next
-        while currentOffset < container.endIndex, container[currentOffset] != "\"" {
-            currentOffset = container.index(after: currentOffset)
+        var currentOffset = container.remainder.index(after: container.remainder.startIndex) // Current char is a quote, so go to the next
+        while currentOffset < container.remainder.endIndex, container.remainder[currentOffset] != "\"" {
+            currentOffset = container.remainder.index(after: currentOffset)
         }
 
         // Perform a validation on both loop terminations. The loop must end on a quote ("), not on the end index.
-        guard currentOffset < container.endIndex && container[currentOffset] == "\"" else {
+        guard currentOffset < container.remainder.endIndex && container.remainder[currentOffset] == "\"" else {
             throw DecodingError.dataCorrupted(.init(
-                codingPath: [], debugDescription: "Found an unterminated string in \(container)"))
+                codingPath: [], debugDescription: "Found an unterminated string in \(container.remainder)"))
         }
         // "Manually" advance by one character, as the loop above ends scanning ON the trailing quote (").
         // Advancing the index by one character will include the quote (") accordingly.
-        currentOffset = container.index(after: currentOffset)
-        let substring = container[container.startIndex..<currentOffset]
+        currentOffset = container.remainder.index(after: currentOffset)
+        let substring = container.remainder[container.remainder.startIndex..<currentOffset]
         return (substring, substring.count)
     }
 }

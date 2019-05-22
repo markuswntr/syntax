@@ -26,8 +26,8 @@ class ParserTests: XCTestCase {
         nodeDescriptor.append(PatternDescription())
         let parser = Parser(descriptors: nodeDescriptor)
 
-        XCTAssertNoThrow(try parser.analyse(container: tokens))
-        let syntaxTree = try! parser.analyse(container: tokens)
+        let syntaxTree: Node
+        XCTAssertNoThrow(syntaxTree = try parser.analyse(collection: tokens))
 
         XCTAssertNotNil(syntaxTree as? [Node])
         let nodes = syntaxTree as! [Node]

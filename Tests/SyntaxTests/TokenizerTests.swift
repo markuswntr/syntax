@@ -19,10 +19,10 @@ final class TokenizerTests: XCTestCase {
         let tokenizer = Tokenizer(descriptors: descriptors)
 
         let analysee = "([unless] [asd] \"some string\")"
-        XCTAssertNoThrow(try tokenizer.analyse(string: analysee))
         XCTAssertNoThrow(try tokenizer.analyse(data: analysee.data(using: .utf8)!, encoding: .utf8))
-        let tokens = try! tokenizer.analyse(string: analysee)
 
+        var tokens: [Token] = []
+        XCTAssertNoThrow(tokens = try tokenizer.analyse(string: analysee))
         XCTAssertTrue(tokens.count == 9)
         
         XCTAssertTrue((tokens[0] as? CharacterToken) == .parentheseOpen)

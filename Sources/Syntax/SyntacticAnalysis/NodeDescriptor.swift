@@ -3,8 +3,6 @@ import Foundation
 /// A type to describe how a node will look like based of one or several token.
 public protocol NodeDescriptor {
 
-    // FIXME: This function is so tedious to read and write
-
     /// Evaluates given container against a node that is described by self, returning the first matching
     /// node and its consuming length in the container on success, `nil` otherwise.
     ///
@@ -15,6 +13,6 @@ public protocol NodeDescriptor {
     /// - Throws: An error if the container does not start with tokens that can be described as nodes by this descriptor
     func first<Container: Collection>(
         in container: Container,
-        analyse branch: (Container.SubSequence) throws -> Node
-    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token
+        analyse branch: (Container.SubSequence) throws -> Analysis<Node>
+    ) throws -> Analysis<Node>? where Container.Element == Token
 }

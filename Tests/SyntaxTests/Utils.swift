@@ -1,11 +1,7 @@
 import Syntax
 import Foundation
 
-// MARK: "Models"
-
-extension Substring: Token {}
-extension String: Node {}
-extension Double: Node {}
+// MARK: Models
 
 enum CharacterToken: Character, CaseIterable, Syntax.CharacterToken {
     case parentheseOpen = "("
@@ -15,62 +11,61 @@ enum CharacterToken: Character, CaseIterable, Syntax.CharacterToken {
     case collectionSeparator = ","
 }
 
-enum KeywordToken: String, CaseIterable, Syntax.KeywordToken, Node {
+enum Keyword: String, CaseIterable, KeywordToken, Node {
+    case `switch` // Will properly resolve to "switch"
     case unless
-    case `switch` // Will properly resolve
 }
 
-enum PatternToken: Syntax.PatternToken {
-    case variable(Substring)
-
+struct Variable: PatternToken, Node {
+    let name: Substring
     init?(value: String.SubSequence) {
-        self = .variable(value)
+        name = value
+    }
+}
+
+struct Number: PatternToken, Node {
+    let number: Substring
+    init?(value: String.SubSequence) {
+        number = value
     }
 }
 
 // MARK: Descriptions
 
-final class KeywordDescription: NodeDescriptor {
+final class KeywordDescriptor: NodeDescriptor {
 
     func first<Container: Collection>(
         in container: Container,
-        analyse subContainer: (Container.SubSequence) throws -> Node
-    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
-        guard let keyword = container.first as? KeywordToken else {
-            return nil
-        } // This will do fine for testing
-        return (keyword, consumedToken: 1)
+        analyse branch: (Container.SubSequence) throws -> Analysis<Node>
+    ) throws -> Analysis<Node>? where Container.Element == Token {
+        // This descriptor is actually quite useless and missleading. This will do fine for
+        // testing but not in real live - dont use or take as template. You have been warned.
+        guard let keyword = container.first as? Keyword else { return nil }
+        return (result: keyword, numberOfElementsConsumed: 1)
     }
 }
 
-final class PatternDescription: NodeDescriptor {
-
-    // MARK: NodeDescription
+final class PatternDescriptor: NodeDescriptor {
 
     func first<Container: Collection>(
         in container: Container,
-        analyse subContainer: (Container.SubSequence) throws -> Node
-    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
-
-        let node: Node
-        switch container.first as? PatternToken {
-        case let .variable(value)?:
-            node = String(value)
-//        case let .number(value)?:
-//            guard let doubleValue = Double(value) else {
-//                throw DecodingError.dataCorrupted(.init(
-//                    codingPath: [], debugDescription: "The numeric value \(value) is not double convertible."))
-//            }
-//            node = doubleValue
-        default: return nil
+        analyse branch: (Container.SubSequence) throws -> Analysis<Node>
+    ) throws -> Analysis<Node>? where Container.Element == Token {
+        // This descriptor is actually quite useless and missleading. This will do fine for
+        // testing but not in real live - dont use or take as template. You have been warned.
+        if let variable = container.first as? Variable {
+            return (result: variable, numberOfElementsConsumed: 1)
+        } else if let number = container.first as? Number {
+            return (result: number, numberOfElementsConsumed: 1)
         }
-        return (node, consumedToken: 1)
+        return nil
     }
 }
 
-final class StringTokenDescription: TokenDescriptor {
+extension String.SubSequence: Token {}
+final class StringTokenDescriptor: TokenDescriptor {
 
-    func first(in container: Tokenizer.Container) throws -> (Token, consumedLength: Int)? {
+    func first(in container: Tokenizer.Container) throws -> Analysis<Token>? {
         guard container.remainder.first == "\"" else { return nil }
 
         var currentOffset = container.remainder.index(after: container.remainder.startIndex) // Current char is a quote, so go to the next
@@ -83,22 +78,24 @@ final class StringTokenDescription: TokenDescriptor {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: [], debugDescription: "Found an unterminated string in \(container.remainder)"))
         }
+
         // "Manually" advance by one character, as the loop above ends scanning ON the trailing quote (").
         // Advancing the index by one character will include the quote (") accordingly.
         currentOffset = container.remainder.index(after: currentOffset)
         let substring = container.remainder[container.remainder.startIndex..<currentOffset]
-        return (substring, substring.count)
+        return (result: substring, numberOfElementsConsumed: substring.count)
     }
 }
 
 
 /// A description for collections defined as: `a,b,c,d`
-final class CollectionDescription: NodeDescriptor {
+extension Array: Node {}
+final class CollectionDescriptor: NodeDescriptor {
 
     func first<Container: Collection>(
         in container: Container,
-        analyse subContainer: (Container.SubSequence) throws -> Node
-    ) throws -> (Node, consumedToken: Int)? where Container.Element == Token {
+        analyse branch: (Container.SubSequence) throws -> Analysis<Node>
+    ) throws -> Analysis<Node>? where Container.Element == Token {
 
         // #1 check: There must be at least 3 tokens (node, collection separator, node) left in given container
         guard container.count > 2 else { return nil }
@@ -115,25 +112,27 @@ final class CollectionDescription: NodeDescriptor {
         var collection: [Node] = []
         while nextIndex < container.endIndex, container[nextIndex] as? CharacterToken == .collectionSeparator {
             // Analyse the node before the next separator and append it to the collection to be generated
-            try collection.append(subContainer(container[currentIndex..<nextIndex]))
+            let (node, _) = try branch(container[currentIndex..<nextIndex])
+            collection.append(node)
 
             // Advance to the token(s) after the separator
-            currentIndex = container.index(after: nextIndex)
             guard currentIndex < container.endIndex else {
                 // There is no token after the current separator - this is an error
                 throw DecodingError.dataCorrupted(.init(
                     codingPath: [], debugDescription: "Found an unterminated collection in \(container)"))
             }
             // Go to the possible the next separator index
+            currentIndex = container.index(after: nextIndex)
             nextIndex = container.index(after: currentIndex)
         }
 
         // As the loop breaks at the endIndex, the last token needs to be
-        // processed separatly if the collection ends the container end
+        // processed seperatly if the collection ends at the container end
         if nextIndex == container.endIndex {
-            try collection.append(subContainer(container[currentIndex..<nextIndex]))
+            try collection.append(branch(container[currentIndex..<nextIndex]).result)
         }
 
-        return (collection, container.distance(from: container.startIndex, to: nextIndex))
+        let consumed = container.distance(from: container.startIndex, to: nextIndex)
+        return (result: collection, numberOfElementsConsumed: consumed)
     }
 }

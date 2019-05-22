@@ -84,12 +84,9 @@ public struct Tokenizer {
 
             // Find the first token in the remaining string and its consuming length
             let container = Container(base: string, offset: offset)
-            guard let (token, consumed) = try firstToken(in: container) else {
-                throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
-                    "Invalid character \(analysee[offset]) at index \(offset.utf16Offset(in: analysee))"))
-            }
+            let (token, consumed) = try first(in: container)
 
-            // Advance to the next character that starts after the last found token
+            // Advance to the next character that starts after the last consumed character
             offset = analysee.index(offset, offsetBy: consumed)
             tokens.append(token) // and backup the last found token
         }
@@ -135,12 +132,14 @@ extension Tokenizer {
     /// Returns the token starting at given index in given string
     ///
     /// - Complexity: O(*n*), where *n* is the length of the available descriptions sequence.
-    @usableFromInline func firstToken(in container: Container) throws -> (Token, consumedLength: Int)? {
+    @usableFromInline func first(in container: Container) throws -> Analysis<Token> {
         for descriptor in descriptors {
             if let match = try descriptor.first(in: container) {
                 return match
             }
         }
-        return nil
+        let index = container.offset.utf16Offset(in: container.base)
+        throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
+            "Invalid character \(container.base[container.offset]) at index \(index)"))
     }
 }

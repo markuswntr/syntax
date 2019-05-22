@@ -4,5 +4,3 @@ import Foundation
 /// However, to avoid problems once nodes are evolving, there is a protocol in place already.
 public protocol Node {
 }
-
-extension Array: Node {}

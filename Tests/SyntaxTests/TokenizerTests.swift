@@ -8,13 +8,13 @@ final class TokenizerTests: XCTestCase {
         var descriptors: [TokenDescriptor] = CharacterToken.allCases.map {
             CharacterTokenDescriptor(token: $0.rawValue, type: CharacterToken.self)
         }
-        descriptors.append(contentsOf: KeywordToken.allCases.map {
-            try! KeywordTokenDescriptor(token: $0.rawValue, type: KeywordToken.self)
+        descriptors.append(contentsOf: Keyword.allCases.map {
+            try! KeywordTokenDescriptor(token: $0.rawValue, type: Keyword.self)
         })
 
         let variableExpression = try! NSRegularExpression(pattern: "^[a-zA-Z_$][a-zA-Z_$0-9]*", options: [])
-        descriptors.append(PatternTokenDescriptor(regularExpression: variableExpression, type: PatternToken.self))
-        descriptors.append(StringTokenDescription())
+        descriptors.append(PatternTokenDescriptor(regularExpression: variableExpression, type: Variable.self))
+        descriptors.append(StringTokenDescriptor())
 
         let tokenizer = Tokenizer(descriptors: descriptors)
 
@@ -27,15 +27,15 @@ final class TokenizerTests: XCTestCase {
         
         XCTAssertTrue((tokens[0] as? CharacterToken) == .parentheseOpen)
         XCTAssertTrue((tokens[1] as? CharacterToken) == .bracketOpen)
-        if let token = tokens[2] as? KeywordToken {
+        if let token = tokens[2] as? Keyword {
             XCTAssertTrue(token == .unless)
         } else {
             XCTFail()
         }
         XCTAssertTrue((tokens[3] as? CharacterToken) == .bracketClose)
         XCTAssertTrue((tokens[4] as? CharacterToken) == .bracketOpen)
-        if let token = tokens[5] as? PatternToken, case let .variable(value) = token {
-            XCTAssertTrue(value == "asd")
+        if let token = tokens[5] as? Variable {
+            XCTAssertTrue(token.name == "asd")
         } else {
             XCTFail()
         }

@@ -3,8 +3,9 @@ import Foundation
 extension CharacterSet {
 
     /// Test for membership of a particular `Character` in the `CharacterSet`.
+    ///
+    /// - Note: Do not expose it publicly. It is really only useful inside the tokenizer.
     internal func contains(_ member: Character) -> Bool {
-        // FIXME: This is hidden to the public as it needs proper validation if it fits the requirements in tokenization
         return member.unicodeScalars.allSatisfy(contains)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A type to describe how a node will look like based of one or several token.
+/// A type to describe a node based off of one or more token.
 public protocol NodeDescriptor {
 
     /// Evaluates given container against a node that is described by self, returning the first matching

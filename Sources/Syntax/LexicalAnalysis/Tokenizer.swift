@@ -9,7 +9,7 @@ public struct Tokenizer {
         /// The base string that the container is analysing
         public let base: String
 
-        /// The current offset in the base string. Everything up to the offset is analysed.
+        /// The current offset in the base string. Everything up to the offset has been analysed.
         public let offset: String.Index
 
         /// The remaining subsequence to still be analysed in the process
@@ -50,21 +50,37 @@ public struct Tokenizer {
 
     // MARK: Designated Initializer
 
-    /// Initializes a new tokenizer utilizing the configuration and token descriptions from given descriptor.
+    /// Creates a new tokenizer utilizing the configuration and token descriptions from given descriptor.
     ///
     /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
     /// This is a lightweight initializer that only stores references of given values.
+    ///
+    /// - Parameters:
+    ///   - descriptors: The descriptors to be used to identify tokens, in give order.
+    ///   - configuration: The configuration to be used with the tokenizer.
     public init(descriptors: [TokenDescriptor], configuration: Configuration = .init()) {
         self.configuration = configuration
         self.descriptors = descriptors
     }
 
+    /// Creates a new tokenizer utilizing the configuration and token descriptions from given descriptor.
+    ///
+    /// Tokenizer can not be reused. They are bound to the descriptor passed via this initializer.
+    /// This is a lightweight initializer that only stores references of given values.
+    ///
+    /// - Parameters:
+    ///   - descriptor: The descriptor to be used to identify tokens.
+    ///   - configuration: The configuration to be used with the tokenizer.
+    public init(descriptor: TokenDescriptor, configuration: Configuration = .init()) {
+        self.init(descriptors: [descriptor], configuration: configuration)
+    }
+
     // MARK: Analysing
 
-    /// Analyses given string `data` of string `encoding` using the descriptor
+    /// Analyses given string `data` in given `encoding` using the descriptor
     /// passed upon initialisation and returns the tokens found in order.
     @inlinable public func analyse(data: Data, encoding: String.Encoding = .utf8) throws -> [Token] {
-        return try analyse(string: expectString(from: data, encoding: encoding))
+        try analyse(string: expectString(from: data, encoding: encoding))
     }
 
     /// Analyses given `string` using the descriptor passed upon initialisation and returns the tokens found in order.

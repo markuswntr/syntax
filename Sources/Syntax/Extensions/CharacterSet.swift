@@ -6,6 +6,6 @@ extension CharacterSet {
     ///
     /// - Note: Do not expose it publicly. It is really only useful inside the tokenizer.
     internal func contains(_ member: Character) -> Bool {
-        return member.unicodeScalars.allSatisfy(contains)
+        member.unicodeScalars.allSatisfy(contains)
     }
 }

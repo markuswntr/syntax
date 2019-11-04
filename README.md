@@ -6,4 +6,6 @@
 
 ## Getting Started
 
-Syntax is under heavy development and requires you to use the latest swift-5.0 toolchain release from https://swift.org/download/#snapshots.
+## TODO
+- [ ] Testing example
+- [ ] Define error (codes) and remove decoding errors as placeholders

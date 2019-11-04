@@ -10,34 +10,34 @@ public protocol Token {
 /// A token that consists of exactly one single character, e.g. parentheses, colon, semicolon, ...
 public protocol CharacterToken: Token {
 
-    /// The initializer takes a matching character found while tokenization
-    init?(value: Character)
+    /// The initializer takes a matching character found while tokenizing
+    init?(token: Character)
 }
 
-extension CharacterToken where Self: RawRepresentable, RawValue == Character {
+extension CharacterToken where Self: RawRepresentable, Self.RawValue == Character {
 
-    /// Forwards the initializer to the raw initializer if it is a raw representable, i.e. Char enum
-    public init?(value: Character) {
-        self.init(rawValue: value)
+    /// Forwards the initializer to the raw value initializer if it is raw representable, i.e. char enum
+    @inlinable public init?(token: Character) {
+        self.init(rawValue: token)
     }
 }
 
 // MARK: Keyword Token
 
-/// A token that is of 2-n characters in length and is described by a static string aka keyword.
+/// A token that is of 2-n characters in length and is described by a keyword (aka keyword).
 ///
-/// A static string example might be keywords like `if`, `for`, `switch` in traditonal programming languages.
+/// An example of a keyword token might be `if`, `for`, `switch` – in traditonal programming languages.
 public protocol KeywordToken: Token {
 
     /// The initializer takes the keyword as string
-    init?(value: String)
+    init?(token: String)
 }
 
-extension KeywordToken where Self: RawRepresentable, RawValue == String {
+extension KeywordToken where Self: RawRepresentable, Self.RawValue == String {
 
-    /// Forwards the initializer to the raw initializer if it is a raw representable, i.e. String enum
-    public init?(value: String) {
-        self.init(rawValue: value)
+    /// Forwards the initializer to the raw value initializer if it is raw representable, i.e. String enum
+    public init?(token: String) {
+        self.init(rawValue: token)
     }
 }
 
@@ -48,8 +48,8 @@ extension KeywordToken where Self: RawRepresentable, RawValue == String {
 /// A Regular expression based pattern token might be variable names in traditonal programming languages.
 public protocol PatternToken: Token {
 
-    /// The initializer takes the found string subsequence as argument
+    /// The initializer takes the matching string subsequence as argument
     ///
-    /// - Note: The subsequence is still just pointing to a range in its base, extracting it will descrease performance.
-    init?(value: String.SubSequence)
+    /// - Note: The subsequence is still just pointing to a range in its base. Extracting it will descrease performance.
+    init?(token: String.SubSequence)
 }

@@ -18,15 +18,15 @@ enum Keyword: String, CaseIterable, KeywordToken, Node {
 
 struct Variable: PatternToken, Node {
     let name: Substring
-    init?(value: String.SubSequence) {
-        name = value
+    init?(token: String.SubSequence) {
+        name = token
     }
 }
 
 struct Number: PatternToken, Node {
     let number: Substring
-    init?(value: String.SubSequence) {
-        number = value
+    init?(token: String.SubSequence) {
+        number = token
     }
 }
 

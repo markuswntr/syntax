@@ -36,7 +36,7 @@ public final class CharacterTokenDescriptor: TokenDescriptor {
         // 1. Compare the character described in self, and the current character in the tokenizing string
         guard let analysee = container.remainder.first, analysee == rawValue else { return nil }
         // 2. It they match, try to create a native representation of that character
-        guard let token = nativeType.init(value: analysee) else {
+        guard let token = nativeType.init(token: analysee) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                 "Character \(analysee) is not representable as \(nativeType)"))
         }
@@ -74,7 +74,7 @@ public final class KeywordTokenDescriptor: TokenDescriptor {
     public func first(in container: Tokenizer.Container) throws -> Analysis<Token>? {
         guard container.remainder.starts(with: rawValue) else { return nil }
         // Use `rawValue` rather than the container to avoid extraction
-        guard let token = nativeType.init(value: rawValue) else {
+        guard let token = nativeType.init(token: rawValue) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                 "Keyword \(rawValue) is not representable as \(nativeType)"))
         }
@@ -109,13 +109,32 @@ public final class PatternTokenDescriptor: TokenDescriptor {
         let remainingRange = NSRange(container.offset..., in: container.base)
         let firstMatch = regex.firstMatch(in: container.base, options: .anchored, range: remainingRange)
         guard let result = firstMatch, result.range.location != NSNotFound, result.range.length != 0 else { return nil }
-        guard let rowValueRange = Range(result.range, in: container.base) else { return nil }
+        guard let rawValueRange = Range(result.range, in: container.base) else { return nil }
 
-        let rawValue = container.base[rowValueRange]
-        guard let token = nativeType.init(value: rawValue) else {
+        let rawValue = container.base[rawValueRange]
+        guard let token = nativeType.init(token: rawValue) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription:
                 "Pattern \(rawValue) is not representable as \(nativeType)"))
         }
         return (result: token, numberOfElementsConsumed: rawValue.count)
+    }
+}
+
+// MARK: CollectionToken Descriptor
+
+/// An array may be used as token descriptor if all elements are token descriptors. The first to match wins.
+extension Array: TokenDescriptor where Element: TokenDescriptor {
+
+    /// Evaluates given container against a token that is described by any of the containing token descriptors,
+    /// returning the first matching token and its consuming length in the container on success, `nil` otherwise.
+    ///
+    /// - parameter container: The remaining subsequence in the tokenizer to be evaluated.
+    @inlinable public func first(in container: Tokenizer.Container) throws -> Analysis<Token>? {
+        for tokenizer in self {
+            if let token = try tokenizer.first(in: container) {
+                return token
+            }
+        }
+        return nil
     }
 }

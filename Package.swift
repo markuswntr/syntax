@@ -9,5 +9,7 @@ let package = Package(
     targets: [
         .target(name: "Syntax", dependencies: []),
         .testTarget(name: "SyntaxTests", dependencies: ["Syntax"]),
+        // The following test may be used as example
+        .testTarget(name: "MarkdownTests", dependencies: ["Syntax"]),
     ]
 )
